@@ -1,0 +1,14 @@
+# OS and editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Node (tests and tooling only, the extension itself has no build)
+node_modules/
+
+# Misc
+*.log
+*.tmp

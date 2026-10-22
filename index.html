@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TableGrab: copy any web table as Markdown, CSV or TSV</title>
+<meta name="description" content="One click copies any web table as Markdown, CSV or TSV. Free, open source, unlimited, no account.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=Sora:wght@600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0b1626;
+    --navy-2: #101f38;
+    --navy-3: #1d3355;
+    --gold: #c9a227;
+    --gold-bright: #e0bb3a;
+    --paper: #f2ead2;
+    --muted: #9fb0c9;
+    --line: #24365a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--navy);
+    color: var(--paper);
+    font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 20px 72px; }
+  header { padding: 64px 0 12px; }
+  .kicker {
+    color: var(--gold);
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 12px;
+    margin: 0 0 12px;
+  }
+  h1 {
+    font-family: "Sora", system-ui, sans-serif;
+    font-size: 52px;
+    line-height: 1.05;
+    margin: 0 0 14px;
+  }
+  h1 .gold { color: var(--gold); }
+  .lede { font-size: 19px; color: var(--paper); max-width: 640px; margin: 0 0 10px; }
+  .sub { color: var(--muted); max-width: 640px; margin: 0 0 26px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 30px; }
+  .badge {
+    border: 1px solid var(--gold);
+    color: var(--gold-bright);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  h2 {
+    font-family: "Sora", system-ui, sans-serif;
+    font-size: 26px;
+    margin: 46px 0 12px;
+  }
+  h3 { font-family: "Sora", system-ui, sans-serif; font-size: 18px; margin: 0 0 8px; }
+  p { color: var(--paper); }
+  .muted { color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--navy-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .compare {
+    background: var(--navy-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .compare p { margin: 6px 0; color: var(--muted); font-size: 15px; }
+  .compare strong { color: var(--paper); }
+  ol.steps { padding-left: 20px; color: var(--muted); }
+  ol.steps li { margin-bottom: 6px; }
+  code {
+    font-family: "IBM Plex Mono", monospace;
+    background: var(--navy-3);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 0.9em;
+    color: var(--gold-bright);
+  }
+  .demo-block {
+    background: var(--navy-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 18px;
+  }
+  .demo-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; }
+  .copy-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .copy-btn {
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    border-radius: 7px;
+    padding: 8px 13px;
+    font: 700 12px "Plus Jakarta Sans", system-ui, sans-serif;
+    cursor: pointer;
+  }
+  .copy-btn.alt { background: transparent; color: var(--gold-bright); border: 1px solid var(--gold); }
+  .copy-btn:hover { background: var(--gold-bright); color: var(--navy); }
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 14px;
+  }
+  table.data th, table.data td {
+    border: 1px solid var(--line);
+    padding: 9px 11px;
+    text-align: left;
+  }
+  table.data thead th {
+    background: var(--navy-3);
+    color: var(--gold-bright);
+    font-family: "Sora", system-ui, sans-serif;
+    font-size: 13px;
+  }
+  table.data td { color: var(--paper); }
+  table.data td.num { font-family: "IBM Plex Mono", monospace; }
+  .status { min-height: 20px; color: var(--gold-bright); font-size: 13px; margin: 12px 0 0; }
+  pre.output {
+    display: none;
+    background: #081120;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px;
+    overflow-x: auto;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--paper);
+    white-space: pre;
+  }
+  footer { margin-top: 56px; border-top: 1px solid var(--line); padding-top: 18px; color: var(--muted); font-size: 13px; }
+  a { color: var(--gold-bright); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">Free and open source</p>
+    <h1>Table<span class="gold">Grab</span></h1>
+    <p class="lede">One click copies any web table as Markdown, CSV or TSV.</p>
+    <p class="sub">No row limits. No subscription. No account. No data collected. The popular table tools cap your free exports and paywall the formats you actually need. TableGrab just copies the table.</p>
+    <div class="badges">
+      <span class="badge">Unlimited rows</span>
+      <span class="badge">Markdown, CSV and TSV</span>
+      <span class="badge">No account</span>
+      <span class="badge">MIT licensed</span>
+    </div>
+  </header>
+
+  <h2>Why this exists</h2>
+  <div class="compare">
+    <p><strong>Table Capture</strong> (the category leader) limits free exports to 250 rows, and puts CSV and Excel downloads and Markdown copying behind its paid subscription.</p>
+    <p><strong>TableClipper</strong> limits free use to 100 rows.</p>
+    <p><strong>TableGrab</strong> has no caps at all, because a table copy is a small local job your browser can do for free. The whole tool is open source, so you can read exactly what it does.</p>
+    <p class="muted">Competitor limits as published on their own listings and pricing pages in October 2026.</p>
+  </div>
+
+  <h2>What it does</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Hover and copy</h3>
+      <p>Turn on copy buttons from the popup, hover any table on the page, and pick Markdown, CSV or TSV from the small gold control.</p>
+    </div>
+    <div class="card">
+      <h3>Largest table, one click</h3>
+      <p>The popup can copy the biggest table on the page (by row count) in any format, without hunting for it.</p>
+    </div>
+    <div class="card">
+      <h3>Clean output</h3>
+      <p>Headers come from the table header or the first row of header cells. Pipes are escaped in Markdown, quotes are escaped in CSV, and stray whitespace is collapsed.</p>
+    </div>
+    <div class="card">
+      <h3>Private by design</h3>
+      <p>No analytics, no server, no account. The extension only touches a page when you click, using the activeTab permission. See the README for the full permission story.</p>
+    </div>
+  </div>
+
+  <h2>Install in Chrome</h2>
+  <ol class="steps">
+    <li>Download or clone this repository.</li>
+    <li>Open <code>chrome://extensions</code> and turn on Developer mode.</li>
+    <li>Click "Load unpacked" and select the <code>extension</code> folder from this repo.</li>
+    <li>Pin TableGrab, open any page with a table, and click the icon.</li>
+  </ol>
+  <p class="muted">Firefox note: the extension uses standard WebExtensions APIs. It can be loaded temporarily from <code>about:debugging</code> using the same <code>extension</code> folder, though Chrome is the tested target for v1.</p>
+
+  <h2>Try the exact conversion, right here</h2>
+  <p class="muted">These two tables are real HTML tables, and the buttons run the same conversion functions the extension uses. The result is also shown below each table so you can inspect it before pasting anywhere.</p>
+
+  <div class="demo-block">
+    <div class="demo-head">
+      <h3>Sample 1: lane rates (with a header row)</h3>
+      <div class="copy-row">
+        <button class="copy-btn" data-table="sample-1" data-format="markdown">Copy as Markdown</button>
+        <button class="copy-btn alt" data-table="sample-1" data-format="csv">Copy as CSV</button>
+        <button class="copy-btn alt" data-table="sample-1" data-format="tsv">Copy as TSV</button>
+      </div>
+    </div>
+    <table class="data" id="sample-1">
+      <thead>
+        <tr><th>Carrier</th><th>MC</th><th>Lane</th><th>Rate</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Blue Ridge Freight LLC</td><td class="num">MC 812345</td><td>Dallas, TX to Atlanta, GA</td><td class="num">$2,850</td><td>Dry van, drop and hook</td></tr>
+        <tr><td>Prairie Line Carriers</td><td class="num">MC 654321</td><td>Kansas City, MO to Denver, CO</td><td class="num">$1,940</td><td>Reefer, "keep at 34F", no touch</td></tr>
+        <tr><td>North | South Relay Inc</td><td class="num">MC 298174</td><td>Chicago, IL to Memphis, TN</td><td class="num">$1,275</td><td>Flatbed, tarps required</td></tr>
+        <tr><td>Desert Route Transport</td><td class="num">MC 447902</td><td>Phoenix, AZ to Las Vegas, NV</td><td class="num">$890</td><td>Power only, trailer provided</td></tr>
+      </tbody>
+    </table>
+    <p class="status" id="status-sample-1"></p>
+    <pre class="output" id="output-sample-1"></pre>
+  </div>
+
+  <div class="demo-block">
+    <div class="demo-head">
+      <h3>Sample 2: detention log (no header row)</h3>
+      <div class="copy-row">
+        <button class="copy-btn" data-table="sample-2" data-format="markdown">Copy as Markdown</button>
+        <button class="copy-btn alt" data-table="sample-2" data-format="csv">Copy as CSV</button>
+        <button class="copy-btn alt" data-table="sample-2" data-format="tsv">Copy as TSV</button>
+      </div>
+    </div>
+    <table class="data" id="sample-2">
+      <tbody>
+        <tr><td>Truck 118</td><td>Arrived 08:00</td><td>Departed 11:30</td><td>Billable 1.5 hrs</td><td class="num">$112.50</td></tr>
+        <tr><td>Truck 204</td><td>Arrived 13:15</td><td>Departed 15:00</td><td>Within free time</td><td class="num">$0.00</td></tr>
+        <tr><td>Truck 317</td><td>Arrived 06:40</td><td>Departed 12:10</td><td>Billable 3.5 hrs</td><td class="num">$262.50</td></tr>
+      </tbody>
+    </table>
+    <p class="status" id="status-sample-2"></p>
+    <pre class="output" id="output-sample-2"></pre>
+    <p class="muted">This table has no header cells, so TableGrab treats every row as data. In Markdown it emits the rows without inventing a header, exactly as documented in the README.</p>
+  </div>
+
+  <footer>
+    <p>TableGrab v1.0.0, MIT licensed. Built by Dispatch Authority. The conversion code on this page is the same code the extension runs (duplicated in v1, as noted in the README).</p>
+  </footer>
+
+</div>
+
+<script>
+/*
+ * TableGrab conversion logic.
+ * Duplicated from extension/content.js in v1 so this demo page
+ * runs the exact same conversion as the extension.
+ */
+function normalizeCell(text) {
+  return String(text == null ? "" : text).replace(/\s+/g, " ").trim();
+}
+
+function padRows(rows) {
+  var width = 0;
+  rows.forEach(function (row) { if (row.length > width) width = row.length; });
+  return rows.map(function (row) {
+    var copy = row.slice();
+    while (copy.length < width) copy.push("");
+    return copy;
+  });
+}
+
+function escapeMarkdownCell(text) {
+  return normalizeCell(text).replace(/\|/g, "\\|");
+}
+
+function rowsToMarkdown(rows, hasHeader) {
+  if (!rows || rows.length === 0) return "";
+  var padded = padRows(rows.map(function (row) { return row.map(escapeMarkdownCell); }));
+  var lines = [];
+  if (hasHeader) {
+    lines.push("| " + padded[0].join(" | ") + " |");
+    lines.push("| " + padded[0].map(function () { return "---"; }).join(" | ") + " |");
+    for (var i = 1; i < padded.length; i++) lines.push("| " + padded[i].join(" | ") + " |");
+  } else {
+    padded.forEach(function (row) { lines.push("| " + row.join(" | ") + " |"); });
+  }
+  return lines.join("\n");
+}
+
+function escapeCsvCell(text) {
+  var value = String(text == null ? "" : text);
+  if (/[",\r\n]/.test(value)) return '"' + value.replace(/"/g, '""') + '"';
+  return value;
+}
+
+function rowsToCSV(rows) {
+  if (!rows || rows.length === 0) return "";
+  return padRows(rows).map(function (row) { return row.map(escapeCsvCell).join(","); }).join("\r\n");
+}
+
+function escapeTsvCell(text) {
+  return String(text == null ? "" : text).replace(/[\t\r\n]+/g, " ");
+}
+
+function rowsToTSV(rows) {
+  if (!rows || rows.length === 0) return "";
+  return padRows(rows).map(function (row) { return row.map(escapeTsvCell).join("\t"); }).join("\n");
+}
+
+function convertRows(rows, hasHeader, format) {
+  if (format === "csv") return rowsToCSV(rows);
+  if (format === "tsv") return rowsToTSV(rows);
+  return rowsToMarkdown(rows, hasHeader);
+}
+
+function parseTableModel(grid, options) {
+  var opts = options || {};
+  var rows = (grid || []).map(function (row) {
+    return row.map(function (cell) { return normalizeCell(cell && cell.text); });
+  });
+  var hasHeader = false;
+  if (rows.length > 0) {
+    if (opts.fromThead) hasHeader = true;
+    else if (grid && grid.length > 0) {
+      hasHeader = grid[0].some(function (cell) { return !!(cell && cell.isHeader); });
+    }
+  }
+  return { rows: rows, hasHeader: hasHeader };
+}
+
+function parseTable(tableEl) {
+  var grid = [];
+  var fromThead = false;
+  Array.prototype.slice.call(tableEl.rows).forEach(function (tr) {
+    if (tr.parentNode && tr.parentNode.tagName === "THEAD") fromThead = true;
+    var row = [];
+    Array.prototype.slice.call(tr.cells).forEach(function (cell) {
+      row.push({ text: cell.textContent || "", isHeader: cell.tagName === "TH" });
+    });
+    if (row.length > 0) grid.push(row);
+  });
+  return parseTableModel(grid, { fromThead: fromThead });
+}
+
+function formatLabel(format) {
+  if (format === "csv") return "CSV";
+  if (format === "tsv") return "TSV";
+  return "Markdown";
+}
+
+/* Demo wiring */
+document.querySelectorAll("button[data-table]").forEach(function (button) {
+  button.addEventListener("click", function () {
+    var tableId = button.getAttribute("data-table");
+    var format = button.getAttribute("data-format");
+    var table = document.getElementById(tableId);
+    var status = document.getElementById("status-" + tableId);
+    var output = document.getElementById("output-" + tableId);
+    var model = parseTable(table);
+    var text = convertRows(model.rows, model.hasHeader, format);
+    output.textContent = text;
+    output.style.display = "block";
+    function done(ok) {
+      status.textContent = ok
+        ? "Copied " + model.rows.length + " rows as " + formatLabel(format) + ". Paste anywhere."
+        : "Converted " + model.rows.length + " rows as " + formatLabel(format) + ". Shown below, copy it manually (the browser blocked the clipboard here).";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } else {
+      done(false);
+    }
+  });
+});
+</script>
+</body>
+</html>

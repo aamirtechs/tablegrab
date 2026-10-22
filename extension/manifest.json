@@ -1,0 +1,1 @@
+{"action":{"default_popup":"popup.html","default_title":"TableGrab: copy tables as Markdown, CSV or TSV"},"description":"One click copies any web table as Markdown, CSV or TSV. Free, open source, unlimited, no account.","manifest_version":3,"name":"TableGrab","permissions":["activeTab","scripting","clipboardWrite"],"version":"1.0.0"}
